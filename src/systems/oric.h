@@ -21,7 +21,7 @@
 // You need to include the following headers before including oric.h:
 //
 // - chips/chips_common.h
-// - chips/wdc65C02cpu.h | chips/mos6502cpu.h
+// - chips/mos6502cpu.h
 // - chips/mos6522via.h
 // - chips/ay38910psg.h
 // - chips/kbd.h

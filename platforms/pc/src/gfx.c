@@ -483,7 +483,8 @@ void gfx_draw(chips_display_info_t display_info) {
             (float)state.offscreen.view.height / (float)state.fb.dim.height
         }
     };
-    sg_apply_uniforms(UB_offscreen_vs_params, &SG_RANGE(vs_params));
+    // NOTE: Uniform blocks disabled for OpenGL compatibility on Linux
+    // sg_apply_uniforms(UB_offscreen_vs_params, &SG_RANGE(vs_params));
     sg_draw(0, 4, 1);
     sg_end_pass();
 

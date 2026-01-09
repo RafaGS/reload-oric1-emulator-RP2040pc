@@ -541,7 +541,8 @@ static inline void _mos6502cpu_sbx(mos6502cpu_t* c, uint8_t v) {
 
 void mos6502cpu_init(mos6502cpu_t* c, const mos6502cpu_desc_t* desc) {
     CHIPS_ASSERT(c && desc);
-    memset(c, 0, sizeof(*c));
+    // memset(c, 0, sizeof(*c));  // PATCHED: Commented out for RP2040 - causes crash
+                                   // Memory is pre-cleared before calling this function
     c->zf = true;
     c->bcd_enabled = !desc->bcd_disabled;
     c->rw = true;

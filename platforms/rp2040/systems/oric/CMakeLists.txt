@@ -13,8 +13,8 @@ target_compile_options(oric PRIVATE -Wall)
 
 target_compile_definitions(oric PRIVATE
 	# DVI_DEFAULT_SERIAL_CONFIG=pico_sock_cfg
-	DVI_DEFAULT_SERIAL_CONFIG=olimex_neo6502_cfg
-	# DVI_DEFAULT_SERIAL_CONFIG=olimex_rp2040pc_cfg
+	# DVI_DEFAULT_SERIAL_CONFIG=olimex_neo6502_cfg
+	DVI_DEFAULT_SERIAL_CONFIG=olimex_rp2040pc_cfg
 	# DVI_DEFAULT_SERIAL_CONFIG=pico_zero_cfg
 )
 

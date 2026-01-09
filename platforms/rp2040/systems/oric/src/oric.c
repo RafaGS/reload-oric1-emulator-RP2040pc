@@ -30,15 +30,11 @@
 #include <pico/platform.h>
 #include "pico/stdlib.h"
 
-#include "roms/pravetz8d_roms.h"
 #include "images/oric_images.h"
+#include "roms/oric_roms.h"
 
 #include "chips/chips_common.h"
-#ifdef OLIMEX_NEO6502
-#include "chips/wdc65C02cpu.h"
-#else
 #include "chips/mos6502cpu.h"
-#endif
 #include "chips/mos6522via.h"
 #include "chips/ay38910psg.h"
 #include "chips/kbd.h"
@@ -55,6 +51,7 @@
 #include "hardware/gpio.h"
 #include "hardware/irq.h"
 #include "hardware/structs/bus_ctrl.h"
+#include "hardware/uart.h"
 #include "hardware/vreg.h"
 #include "hardware/interp.h"
 #include "pico/multicore.h"
@@ -113,6 +110,7 @@ void app_init(void) {
 }
 
 #ifdef OLIMEX_NEO6502
+// Olimex RP2040-PC configuration
 // TMDS bit clock 295.2 MHz
 // DVDD 1.2V
 #define FRAME_WIDTH  800
@@ -120,12 +118,13 @@ void app_init(void) {
 #define VREG_VSEL    VREG_VOLTAGE_1_20
 #define DVI_TIMING   dvi_timing_800x480p_60hz
 #else
-// TMDS bit clock 372 MHz
-// DVDD 1.3V
-#define FRAME_WIDTH  960
-#define FRAME_HEIGHT 544
-#define VREG_VSEL    VREG_VOLTAGE_1_30
-#define DVI_TIMING   dvi_timing_960x544p_60hz
+// Generic RP2040 fallback
+// TMDS bit clock 295.2 MHz
+// DVDD 1.2V
+#define FRAME_WIDTH  800
+#define FRAME_HEIGHT 480
+#define VREG_VSEL    VREG_VOLTAGE_1_20
+#define DVI_TIMING   dvi_timing_800x480p_60hz
 #endif  // OLIMEX_NEO6502
 
 uint32_t __not_in_flash() tmds_palette[PALETTE_SIZE * 6];
@@ -275,14 +274,33 @@ void __not_in_flash_func(core1_main()) {
 }
 
 int main() {
+    // Early UART1 init for clean boot logs before clock change
+    uart_init(uart1, 115200);
+    gpio_set_function(8, GPIO_FUNC_UART);   // GPIO8 = TX
+    gpio_set_function(9, GPIO_FUNC_UART);   // GPIO9 = RX
+    uart_puts(uart1, "\n\n=== Oric Emulator (RP2040) ===\n");
+    uart_puts(uart1, "UART1 initialized at 115200 baud (GPIO08 TX, GPIO09 RX)\n");
+
+    uart_puts(uart1, "Setting VREG to 1.30 V\n");
     vreg_set_voltage(VREG_VSEL);
     sleep_ms(10);
+
+    // Change clock (no UART output during this)
     set_sys_clock_khz(DVI_TIMING.bit_clk_khz, true);
+
+    // Wait for clock to stabilize
+    sleep_ms(100);
+    
+    // Reinitialize UART pins and baudrate after clock change
+    gpio_set_function(8, GPIO_FUNC_UART);   // GPIO8 = TX
+    gpio_set_function(9, GPIO_FUNC_UART);   // GPIO9 = RX
+    uart_set_baudrate(uart1, 115200);
+    uart_puts(uart1, "System clock changed to DVI timing\n");
 
     stdio_init_all();
     tusb_init();
 
-    printf("Configuring DVI\n");
+    uart_puts(uart1, "Configuring DVI\n");
 
     dvi0.timing = &DVI_TIMING;
     dvi0.ser_cfg = DVI_DEFAULT_SERIAL_CONFIG;
